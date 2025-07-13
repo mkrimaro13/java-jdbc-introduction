@@ -1,0 +1,14 @@
+services:
+  mysql:
+    image: mysql:latest # Utiliza la imagen oficial de MySQL
+    container_name: mysql-test-database
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234 # Contraseña para el usuario root
+      MYSQL_DATABASE: test-database # Opcional: base de datos a crear al inicio
+    ports:
+      - "3306:3306" # Mapea el puerto 3306 del host al puerto 3306 del contenedor
+    volumes:
+      - ./DDL-DML.sql:/docker-entrypoint-initdb.d/init.sql # sentencias DDL y DML
+    command: --general_log=1 # Habilita los logs "general_log" habilita los logs, y "general_log_file" escribe las consultas a un archivo
+    userns_mode: "host"
+    user: "999:999"
