@@ -36,7 +36,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'java.jdbc.introduction.App'
+    mainClass = 'jdbc.introduction.App'
 }
 
 tasks.named('test') {

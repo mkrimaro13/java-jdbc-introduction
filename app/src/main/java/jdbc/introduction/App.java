@@ -1,6 +1,8 @@
 package jdbc.introduction;
 
 import java.sql.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class App {
@@ -8,45 +10,99 @@ public class App {
         return "Hello World!";
     }
 
+    static void printRow() {
+
+    }
+
+    static void printResultSet(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        String
+    }
+
+    static ResultSet simpleSelect(Connection connection, PreparedStatement preparedStatement, String table,
+                                  List<String> columns,
+                                  List<String> filters) throws SQLException {
+        StringBuilder selectQuery = new StringBuilder("SELECT ");
+        if (columns == null || columns.isEmpty()) {
+            selectQuery.append("* ");
+        } else {
+            for (int i = 0; i < columns.size(); i++) {
+                if (i == columns.size() - 1) {
+                    selectQuery.append(columns.get(i)).append(" ");
+                } else {
+                    selectQuery.append(columns.get(i)).append(", ");
+                }
+            }
+        }
+        if (table != null && table.isEmpty()) {
+            throw new IllegalArgumentException("Se debe indicar el nombre de la tabla a consultar");
+        }
+        System.out.printf("Ejecutando consulta en la tabla: %s%n", table);
+        selectQuery.append("FROM ").append(table).append(" ");
+        if (filters != null && !filters.isEmpty()) {
+            selectQuery.append("WHERE ");
+            for (int i = 0; i < filters.size(); i++) {
+                if (i == filters.size() - 1) {
+                    selectQuery.append(filters.get(i)).append(" ");
+                } else {
+                    selectQuery.append(filters.get(i)).append(", ");
+                }
+            }
+        }
+        System.out.println(selectQuery);
+        preparedStatement = connection.prepareStatement(selectQuery.toString());
+        System.out.println(preparedStatement);
+        return preparedStatement.executeQuery();
+    }
+
     public static void main(String[] args) {
         String query = "INSERT INTO employees (first_name, pa_surname, ma_surname, email, salary) values (?,?,?,?,?)";
         int rowsAffected;
-        Map<String, String> datasourceInformation = Map.of("connectionString", "jdbc:mysql://localhost:3306/project", "user", "root", "password", "1234");
+        Map<String, String> datasourceInformation = Map.of("connectionString", "jdbc:mysql://localhost:3306/project",
+                "user", "root", "password", "1234");
 
-        Connection connection = null;
-        Statement statement = null;
+        PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        PreparedStatement preparedStatement;
-        try {
-            connection = DriverManager.getConnection(datasourceInformation.get("connectionString"), datasourceInformation.get("user"), datasourceInformation.get("password"));
+        try (Connection connection = DriverManager.getConnection(datasourceInformation.get("connectionString"),
+                datasourceInformation.get("user"), datasourceInformation.get("password"));) {
             System.out.println("Conectado");
 
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery("SELECT * FROM employees");
-            while (resultSet.next()) {
-                System.out.println("ID: " + resultSet.getInt("id") + ", first_name: " + resultSet.getString("first_name") + ", pa_surname: " + resultSet.getString("pa_surname") + ", ma_surname: " + resultSet.getString("ma_surname") + ", email: " + resultSet.getString("email") + ", salary: " + resultSet.getDouble("salary"));
-            }
 
-            System.out.println();
+            resultSet = simpleSelect(connection, preparedStatement, "employees", List.of("first_name", "pa_surname", "ma_surname", "email", "salary"), null);
 
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, "Marco");
-            preparedStatement.setString(2, "Osorio");
-            preparedStatement.setString(3, "Naranjo");
-            preparedStatement.setString(4, "marco@example.com");
-            preparedStatement.setInt(5, 55000);
+            // statement = connection.createStatement();
+            // resultSet = statement.executeQuery("SELECT * FROM employees");
+            // while (resultSet.next()) {
+            // System.out.println("ID: " + resultSet.getInt("id") + ", first_name: "
+            // + resultSet.getString("first_name") + ", pa_surname: " +
+            // resultSet.getString("pa_surname")
+            // + ", ma_surname: " + resultSet.getString("ma_surname") + ", email: "
+            // + resultSet.getString("email") + ", salary: " +
+            // resultSet.getDouble("salary"));
+            // }
 
-            rowsAffected = preparedStatement.executeUpdate();
-            if (rowsAffected > 0) System.out.println("Empleado creado");
+            // System.out.println();
+
+            // preparedStatement = connection.prepareStatement(query);
+            // preparedStatement.setString(1, "Marco");
+            // preparedStatement.setString(2, "Osorio");
+            // preparedStatement.setString(3, "Naranjo");
+            // preparedStatement.setString(4, "marco@example.com");
+            // preparedStatement.setInt(5, 55000);
+
+            // rowsAffected = preparedStatement.executeUpdate();
+            // if (rowsAffected > 0)
+            // System.out.println("Empleado creado");
 
         } catch (Exception e) {
             System.out.println("Algo a salido mal: " + e);
             throw new RuntimeException("Fallo en la conexión:\n", e);
         } finally {
             try {
-                if (resultSet != null) resultSet.close();
-                if (statement != null) statement.close();
-                if (connection != null) connection.close();
+                if (resultSet != null)
+                    resultSet.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
             } catch (Exception e) {
                 System.out.println("Algo a salido mal: " + e);
             }
