@@ -1,6 +1,7 @@
 package jdbc.introduction;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,13 +11,51 @@ public class App {
         return "Hello World!";
     }
 
-    static void printRow() {
-
+    static void printRow(String[] rows, int[] widths) {
+        StringBuilder row = new StringBuilder();
+        for (int i = 0; i < rows.length; i++) {
+            row.append("| ").append(String.format("%-" + widths[i] + "s", rows[i]))
+                    .append(" ");
+        }
+        row.append("|");
+        System.out.println(row);
     }
 
     static void printResultSet(ResultSet resultSet) throws SQLException {
-        ResultSetMetaData metaData = resultSet.getMetaData();
-        String
+        try {
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            List<String[]> rows = new ArrayList<>();
+            String[] header = new String[columnCount];
+            int[] widths = new int[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                header[i] = metaData.getColumnName(i + 1);
+                widths[i] = metaData.getColumnName(i + 1).length();
+            }
+            rows.add(header);
+            while (resultSet.next()) {
+                String[] data = new String[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    data[i] = resultSet.getString(i + 1);
+                    widths[i] = Math.max(widths[i], data[i].length());
+                }
+                rows.add(data);
+            }
+            StringBuilder divider = new StringBuilder();
+            for (int width : widths) {
+                divider.append("*").append("-".repeat(width + 2));
+            }
+            System.out.println(divider);
+            printRow(header, widths);
+            System.out.println(divider);
+            for (int i = 0; i < rows.size(); i++) {
+                printRow(rows.get(i), widths);
+            }
+            System.out.println(divider);
+
+        } catch (Exception e) {
+            System.out.printf("Algo ha salido mal al imprimir el resultado: %s%n", e.toString());
+        }
     }
 
     static ResultSet simpleSelect(Connection connection, PreparedStatement preparedStatement, String table,
@@ -51,7 +90,6 @@ public class App {
         }
         System.out.println(selectQuery);
         preparedStatement = connection.prepareStatement(selectQuery.toString());
-        System.out.println(preparedStatement);
         return preparedStatement.executeQuery();
     }
 
@@ -69,7 +107,7 @@ public class App {
 
 
             resultSet = simpleSelect(connection, preparedStatement, "employees", List.of("first_name", "pa_surname", "ma_surname", "email", "salary"), null);
-
+            printResultSet(resultSet);
             // statement = connection.createStatement();
             // resultSet = statement.executeQuery("SELECT * FROM employees");
             // while (resultSet.next()) {
