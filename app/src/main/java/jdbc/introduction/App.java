@@ -2,7 +2,6 @@ package jdbc.introduction;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -48,49 +47,54 @@ public class App {
             System.out.println(divider);
             printRow(header, widths);
             System.out.println(divider);
-            for (int i = 0; i < rows.size(); i++) {
-                printRow(rows.get(i), widths);
+            for (String[] row : rows) {
+                printRow(row, widths);
             }
             System.out.println(divider);
 
-        } catch (Exception e) {
-            System.out.printf("Algo ha salido mal al imprimir el resultado: %s%n", e.toString());
+        } catch (SQLException e) {
+            System.out.printf("Algo ha salido mal al imprimir el resultado: %s%n", e);
         }
     }
 
-    static ResultSet simpleSelect(Connection connection, PreparedStatement preparedStatement, String table,
+    static ResultSet simpleSelect(Connection connection, String table,
                                   List<String> columns,
                                   List<String> filters) throws SQLException {
-        StringBuilder selectQuery = new StringBuilder("SELECT ");
-        if (columns == null || columns.isEmpty()) {
-            selectQuery.append("* ");
-        } else {
-            for (int i = 0; i < columns.size(); i++) {
-                if (i == columns.size() - 1) {
-                    selectQuery.append(columns.get(i)).append(" ");
-                } else {
-                    selectQuery.append(columns.get(i)).append(", ");
+        try {
+            StringBuilder selectQuery = new StringBuilder("SELECT ");
+            if (columns == null || columns.isEmpty()) {
+                selectQuery.append("* ");
+            } else {
+                for (int i = 0; i < columns.size(); i++) {
+                    if (i == columns.size() - 1) {
+                        selectQuery.append(columns.get(i)).append(" ");
+                    } else {
+                        selectQuery.append(columns.get(i)).append(", ");
+                    }
                 }
             }
-        }
-        if (table != null && table.isEmpty()) {
-            throw new IllegalArgumentException("Se debe indicar el nombre de la tabla a consultar");
-        }
-        System.out.printf("Ejecutando consulta en la tabla: %s%n", table);
-        selectQuery.append("FROM ").append(table).append(" ");
-        if (filters != null && !filters.isEmpty()) {
-            selectQuery.append("WHERE ");
-            for (int i = 0; i < filters.size(); i++) {
-                if (i == filters.size() - 1) {
-                    selectQuery.append(filters.get(i)).append(" ");
-                } else {
-                    selectQuery.append(filters.get(i)).append(", ");
+            if (table != null && table.isEmpty()) {
+                throw new IllegalArgumentException("Se debe indicar el nombre de la tabla a consultar");
+            }
+            System.out.printf("Ejecutando consulta en la tabla: %s%n", table);
+            selectQuery.append("FROM ").append(table).append(" ");
+            if (filters != null && !filters.isEmpty()) {
+                selectQuery.append("WHERE ");
+                for (int i = 0; i < filters.size(); i++) {
+                    if (i == filters.size() - 1) {
+                        selectQuery.append(filters.get(i)).append(" ");
+                    } else {
+                        selectQuery.append(filters.get(i)).append(", ");
+                    }
                 }
             }
+            System.out.println(selectQuery);
+            PreparedStatement preparedStatement = connection.prepareStatement(selectQuery.toString());
+            return preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            System.out.printf("Algo ha salida mal con la sentencia SELECT: %s%n", e);
         }
-        System.out.println(selectQuery);
-        preparedStatement = connection.prepareStatement(selectQuery.toString());
-        return preparedStatement.executeQuery();
+        return null;
     }
 
     public static void main(String[] args) {
@@ -102,11 +106,11 @@ public class App {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try (Connection connection = DriverManager.getConnection(datasourceInformation.get("connectionString"),
-                datasourceInformation.get("user"), datasourceInformation.get("password"));) {
+                datasourceInformation.get("user"), datasourceInformation.get("password"))) {
             System.out.println("Conectado");
 
 
-            resultSet = simpleSelect(connection, preparedStatement, "employees", List.of("first_name", "pa_surname", "ma_surname", "email", "salary"), null);
+            resultSet = simpleSelect(connection, "employees", List.of("first_name", "pa_surname", "ma_surname", "email", "salary"), null);
             printResultSet(resultSet);
             // statement = connection.createStatement();
             // resultSet = statement.executeQuery("SELECT * FROM employees");
@@ -139,8 +143,6 @@ public class App {
             try {
                 if (resultSet != null)
                     resultSet.close();
-                if (preparedStatement != null)
-                    preparedStatement.close();
             } catch (Exception e) {
                 System.out.println("Algo a salido mal: " + e);
             }
