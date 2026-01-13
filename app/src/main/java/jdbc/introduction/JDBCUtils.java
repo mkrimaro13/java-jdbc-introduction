@@ -4,8 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.checkerframework.checker.units.qual.t;
-
 public class JDBCUtils {
     public static void printRow(String[] rows, int[] widths) {
         StringBuilder row = new StringBuilder();
@@ -59,8 +57,8 @@ public class JDBCUtils {
     }
 
     public static ResultSet simpleSelect(Connection connection, String table,
-                                         List<String> columns,
-                                         List<String> filters) throws Exception {
+            List<String> columns,
+            List<String> filters) throws Exception {
         try {
             StringBuilder selectQuery = new StringBuilder("SELECT ");
             if (columns == null || columns.isEmpty()) {
@@ -89,7 +87,6 @@ public class JDBCUtils {
                     }
                 }
             }
-            System.out.println(selectQuery);
             PreparedStatement preparedStatement = connection.prepareStatement(selectQuery.toString());
             return preparedStatement.executeQuery();
         } catch (SQLException e) {
@@ -117,6 +114,7 @@ public class JDBCUtils {
                 throw new IllegalArgumentException(
                         "El tamaño de las columnas a insertar y los valores a insertar es diferente");
             }
+            System.out.printf("Ejecutando inserción en la tabla: %s%n", table);
             StringBuilder insertQuery = new StringBuilder("INSERT INTO ").append(table).append(" (");
             for (int i = 0; i < columns.length; i++) {
                 if (i == columns.length - 1) {
@@ -138,7 +136,6 @@ public class JDBCUtils {
             for (int i = 0; i < values.length; i++) {
                 preparedStatement.setObject(i + 1, values[i]);
             }
-            System.out.printf("Ejecutando inserción: %s%n", insertQuery);
             int rowsInserted = preparedStatement.executeUpdate();
             return rowsInserted == 1;
         } catch (Exception e) {
@@ -148,7 +145,7 @@ public class JDBCUtils {
     }
 
     public static int simpleUpdate(Connection connection, String table, String[] columns, Object[] values,
-                                   List<String> filters) {
+            List<String> filters) {
         try {
             if (connection == null) {
                 throw new IllegalArgumentException("Se requiere una conexión activa para realizar la consulta");
@@ -169,6 +166,7 @@ public class JDBCUtils {
             if (filters == null || filters.isEmpty()) {
                 throw new IllegalArgumentException("Se requiere algún filtro para realizar una correcta actualización");
             }
+            System.out.printf("Ejecutando actualización sobre la tabla: %s%n", table);
             StringBuilder updateQuery = new StringBuilder("UPDATE ").append(table).append(" SET ");
             for (int i = 0; i < columns.length; i++) {
                 if (i == columns.length - 1) {
@@ -185,7 +183,6 @@ public class JDBCUtils {
                     updateQuery.append(filters.get(i)).append(" AND ");
                 }
             }
-            System.out.println(updateQuery);
             PreparedStatement preparedStatement = connection.prepareStatement(updateQuery.toString());
             for (int i = 0; i < values.length; i++) {
                 preparedStatement.setObject(i + 1, values[i]);
@@ -208,6 +205,7 @@ public class JDBCUtils {
             if (filters == null || filters.isEmpty()) {
                 throw new IllegalArgumentException("Se requiere algún filtro para realizar una correcta actualización");
             }
+            System.out.printf("Ejecutando eliminación de registros en la tabla: %s%n", table);
             StringBuilder deleteQuery = new StringBuilder("DELETE FROM ").append(table).append(" WHERE ");
             for (int i = 0; i < filters.size(); i++) {
                 if (i == filters.size() - 1) {
@@ -216,7 +214,6 @@ public class JDBCUtils {
                     deleteQuery.append(filters.get(i)).append(" AND ");
                 }
             }
-            System.out.println(deleteQuery);
             PreparedStatement preparedStatement = connection.prepareStatement(deleteQuery.toString());
             return preparedStatement.executeUpdate();
         } catch (Exception e) {
