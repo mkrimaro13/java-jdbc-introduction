@@ -8,26 +8,22 @@ public class App {
         return "Hello World!";
     }
 
-
     public static void main(String[] args) {
-        Map<String, String> datasourceInformation = Map.of("connectionString", "jdbc:mysql://localhost:3306/project",
-                "user", "root", "password", "1234");
+        Map<String, String> datasourceInformation = Map.of("connectionString", "jdbc:mysql://localhost:3306/project", "user", "root", "password", "1234");
         ResultSet resultSet = null;
-        try (Connection connection = DriverManager.getConnection(datasourceInformation.get("connectionString"),
-                datasourceInformation.get("user"), datasourceInformation.get("password"))) {
+        try (Connection connection = DriverManager.getConnection(datasourceInformation.get("connectionString"), datasourceInformation.get("user"), datasourceInformation.get("password"))) {
             System.out.println("Conexión a la base de datos realizada");
-
             JDBCUtils.simpleInsert(connection, "employees", new String[]{"first_name", "pa_surname", "ma_surname", "email", "salary"}, new Object[]{"Marco", "Osorio", "Naranjo", "marco@example.com", 55000.00});
-
-            resultSet = JDBCUtils.simpleSelect(connection, "employees", List.of("first_name", "pa_surname", "ma_surname", "email", "salary"), null);
+            JDBCUtils.simpleUpdate(connection, "employees", new String[]{"first_name", "pa_surname", "ma_surname"}, new Object[]{"Manuela", "Lopera", "Jaramillo"}, List.of("id = 11"));
+            JDBCUtils.simpleDelete(connection, "employees", List.of("id = 10"));
+            resultSet = JDBCUtils.simpleSelect(connection, "employees", List.of("id", "first_name", "pa_surname", "ma_surname", "email", "salary"), null);
             JDBCUtils.printResultSet(resultSet);
         } catch (Exception e) {
             System.out.println("Algo a salido mal: " + e);
             throw new RuntimeException("Fallo en la conexión:\n", e);
         } finally {
             try {
-                if (resultSet != null)
-                    resultSet.close();
+                if (resultSet != null) resultSet.close();
             } catch (Exception e) {
                 System.out.println("Algo a salido mal: " + e);
             }

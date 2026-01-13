@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.units.qual.t;
+
 public class JDBCUtils {
     public static void printRow(String[] rows, int[] widths) {
         StringBuilder row = new StringBuilder();
@@ -15,8 +17,11 @@ public class JDBCUtils {
         System.out.println(row);
     }
 
-    public static void printResultSet(ResultSet resultSet) throws SQLException {
+    public static void printResultSet(ResultSet resultSet) throws Exception {
         try {
+            if (resultSet == null) {
+                throw new IllegalArgumentException("Se requiere un set de resultados para poder imprimirlo");
+            }
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
             List<String[]> rows = new ArrayList<>();
@@ -54,8 +59,8 @@ public class JDBCUtils {
     }
 
     public static ResultSet simpleSelect(Connection connection, String table,
-                                  List<String> columns,
-                                  List<String> filters) throws SQLException {
+                                         List<String> columns,
+                                         List<String> filters) throws Exception {
         try {
             StringBuilder selectQuery = new StringBuilder("SELECT ");
             if (columns == null || columns.isEmpty()) {
@@ -93,7 +98,8 @@ public class JDBCUtils {
         return null;
     }
 
-    public static boolean simpleInsert(Connection connection, String table, String[] columns, Object[] values) throws SQLException {
+    public static boolean simpleInsert(Connection connection, String table, String[] columns, Object[] values)
+            throws Exception {
         try {
             if (connection == null) {
                 throw new IllegalArgumentException("Se requiere una conexión activa para realizar la consulta");
@@ -108,7 +114,8 @@ public class JDBCUtils {
                 throw new IllegalArgumentException("Los valores a insertar no pueden ser nulos");
             }
             if (columns.length != values.length) {
-                throw new IllegalArgumentException("El tamaño de las columnas a insertar y los valores a insertar es diferente");
+                throw new IllegalArgumentException(
+                        "El tamaño de las columnas a insertar y los valores a insertar es diferente");
             }
             StringBuilder insertQuery = new StringBuilder("INSERT INTO ").append(table).append(" (");
             for (int i = 0; i < columns.length; i++) {
@@ -138,5 +145,83 @@ public class JDBCUtils {
             System.out.printf("Algo ha salido mal realizando la inserción de datos: %s%n", e);
         }
         return false;
+    }
+
+    public static int simpleUpdate(Connection connection, String table, String[] columns, Object[] values,
+                                   List<String> filters) {
+        try {
+            if (connection == null) {
+                throw new IllegalArgumentException("Se requiere una conexión activa para realizar la consulta");
+            }
+            if (table == null || table.isEmpty()) {
+                throw new IllegalArgumentException("La tabla en la que insertarán los datos no puede ser nula");
+            }
+            if (columns == null || columns.length == 0) {
+                throw new IllegalArgumentException("Las columnas a insertar no pueden ser nulas");
+            }
+            if (values == null || values.length == 0) {
+                throw new IllegalArgumentException("Los valores a insertar no pueden ser nulos");
+            }
+            if (columns.length != values.length) {
+                throw new IllegalArgumentException(
+                        "El tamaño de las columnas a insertar y los valores a insertar es diferente");
+            }
+            if (filters == null || filters.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere algún filtro para realizar una correcta actualización");
+            }
+            StringBuilder updateQuery = new StringBuilder("UPDATE ").append(table).append(" SET ");
+            for (int i = 0; i < columns.length; i++) {
+                if (i == columns.length - 1) {
+                    updateQuery.append(columns[i]).append(" = ").append("? ");
+                } else {
+                    updateQuery.append(columns[i]).append(" = ").append("?, ");
+                }
+            }
+            updateQuery.append("WHERE ");
+            for (int i = 0; i < filters.size(); i++) {
+                if (i == filters.size() - 1) {
+                    updateQuery.append(filters.get(i));
+                } else {
+                    updateQuery.append(filters.get(i)).append(" AND ");
+                }
+            }
+            System.out.println(updateQuery);
+            PreparedStatement preparedStatement = connection.prepareStatement(updateQuery.toString());
+            for (int i = 0; i < values.length; i++) {
+                preparedStatement.setObject(i + 1, values[i]);
+            }
+            return preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            System.out.printf("Algo ha salido mal actualizando registros: %s%n", e);
+        }
+        return 0;
+    }
+
+    public static int simpleDelete(Connection connection, String table, List<String> filters) {
+        try {
+            if (connection == null) {
+                throw new IllegalArgumentException("Se requiere una conexión activa para realizar la consulta");
+            }
+            if (table == null || table.isEmpty()) {
+                throw new IllegalArgumentException("La tabla en la que insertarán los datos no puede ser nula");
+            }
+            if (filters == null || filters.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere algún filtro para realizar una correcta actualización");
+            }
+            StringBuilder deleteQuery = new StringBuilder("DELETE FROM ").append(table).append(" WHERE ");
+            for (int i = 0; i < filters.size(); i++) {
+                if (i == filters.size() - 1) {
+                    deleteQuery.append(filters.get(i));
+                } else {
+                    deleteQuery.append(filters.get(i)).append(" AND ");
+                }
+            }
+            System.out.println(deleteQuery);
+            PreparedStatement preparedStatement = connection.prepareStatement(deleteQuery.toString());
+            return preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            System.out.printf("Algo ha salido mal eliminando el registro: %s%n", e);
+        }
+        return 0;
     }
 }
