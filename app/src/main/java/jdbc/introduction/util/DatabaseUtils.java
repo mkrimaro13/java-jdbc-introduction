@@ -1,17 +1,19 @@
 package jdbc.introduction.util;
 
+import jdbc.introduction.JDBCUtils;
+
 import java.lang.reflect.Field;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jdbc.introduction.JDBCUtils.printRow;
+public class DatabaseUtils {
+    public static void printRow(String[] rows, int[] widths) {
+        JDBCUtils.printRow(rows, widths);
+    }
 
-public class DatabaseUtils<T> {
-    public static <T> void printResultsList(List<T> data, Class<T> type) throws IllegalAccessException {
+    public static <T> void printResultsList(List<T> data, Class<T> type) throws Exception {
         if (data == null || data.isEmpty()) {
-            System.out.println("No hay información para imprimir");
+            throw new Exception("No hay información para imprimir");
         }
         System.out.printf("Imprimiendo datos de la lista respecto a la clase indicada: %s%n", type.getSimpleName());
 
@@ -25,11 +27,10 @@ public class DatabaseUtils<T> {
             header[i] = fields[i].getName();
             widths[i] = fields[i].getName().length();
         }
-        for (int i = 0; i < data.size(); i++) {
+        for (T datum : data) {
             String[] row = new String[columnCount];
-            T item = data.get(i);
             for (int j = 0; j < columnCount; j++) {
-                row[j] = fields[j].get(item).toString();
+                row[j] = fields[j].get(datum).toString();
                 widths[j] = Math.max(widths[j], row[j].length());
             }
             rows.add(row);

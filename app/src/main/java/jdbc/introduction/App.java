@@ -15,7 +15,7 @@ public class App {
         return "Hello World!";
     }
 
-    public static void main(String[] args) throws SQLException, IllegalAccessException {
+    public static void main(String[] args) throws Exception {
         try (Connection connection = DatabaseConnection.getInstance()) {
             System.out.println("Conexión a la base de datos realizada");
 //            JDBCUtils.simpleInsert(connection, "employees", new String[]{"first_name", "pa_surname", "ma_surname", "email", "salary"}, new Object[]{"Marco", "Osorio", "Naranjo", "marco@example.com", 55000.00});
@@ -25,6 +25,7 @@ public class App {
             //JDBCUtils.printResultSet(resultSet);
             Repository<Employee> repo = new EmployeeRepository();
             printResultsList(repo.getAll(), Employee.class);
+            System.out.println(repo.getById(10).orElse(new Employee()));
         }
     }
 }
