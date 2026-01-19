@@ -1,13 +1,11 @@
 package jdbc.introduction.repository;
 
-import jdbc.introduction.JDBCUtils;
 import jdbc.introduction.model.Employee;
 import jdbc.introduction.util.DatabaseConnection;
 
+import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class EmployeeRepository implements Repository<Employee> {
     private Connection getConnection() throws SQLException {
@@ -20,8 +18,7 @@ public class EmployeeRepository implements Repository<Employee> {
 
     @Override
     public List<Employee> getAll() throws SQLException {
-        try (Statement statement = getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM employees")) {
+        try (Statement statement = getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY); ResultSet resultSet = statement.executeQuery("SELECT * FROM employees")) {
             //JDBCUtils.printResultSet(resultSet);
             resultSet.beforeFirst();
             List<Employee> employees = new ArrayList<>();
@@ -47,12 +44,90 @@ public class EmployeeRepository implements Repository<Employee> {
     }
 
     @Override
-    public void save(Employee data) {
+    public void save(Employee data) throws Exception {
+        boolean employeeExists = data.getId() > 0 && checkEmployeeExists(data.getId());
 
+        Map<String, Object> fieldData = extractNonNullFields(data);
+
+        String query = employeeExists
+                ? buildUpdateQuery(fieldData, data.getId())
+                : buildInsertQuery(fieldData);
+
+        System.out.println(query);
+
+        executeQuery(query, fieldData.values());
     }
 
     @Override
-    public void delete(Object id) {
+    public void delete(int id) throws Exception {
+        if (checkEmployeeExists(id)) {
+            try (PreparedStatement preparedStatement = getConnection().prepareStatement("DELETE FROM employees WHERE id = ?")) {
+                preparedStatement.setObject(1, id);
+                preparedStatement.executeUpdate();
+            }
+        } else {
+            throw new Exception("No existe empleado con id: " + id);
+        }
 
+    }
+
+    private boolean checkEmployeeExists(int id) throws Exception {
+        String sql = "SELECT 1 FROM employees WHERE id = ?";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private Map<String, Object> extractNonNullFields(Employee data) {
+        Map<String, Object> fieldData = new LinkedHashMap<>();
+
+        for (Field field : data.getClass().getDeclaredFields()) {
+            if (field.getName().equals("id")) continue;
+
+            field.setAccessible(true);
+            try {
+                Object value = field.get(data);
+                if (value != null) {
+                    String columnName = toSnakeCase(field.getName());
+                    fieldData.put(columnName, value);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return fieldData;
+    }
+
+    private String toSnakeCase(String camelCase) {
+        return camelCase.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+    }
+
+    private String buildUpdateQuery(Map<String, Object> fieldData, int id) {
+        String setClause = String.join(", ",
+                fieldData.keySet().stream()
+                        .map(col -> col + " = ?")
+                        .toList()
+        );
+        return "UPDATE employees SET " + setClause + " WHERE id = " + id;
+    }
+
+    private String buildInsertQuery(Map<String, Object> fieldData) {
+        String columns = String.join(", ", fieldData.keySet());
+        String placeholders = String.join(", ", "?".repeat(fieldData.size()).split(""));
+        return "INSERT INTO employees (" + columns + ") VALUES (" + placeholders + ")";
+    }
+
+    private void executeQuery(String query, Collection<Object> values) throws Exception {
+        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+            int index = 1;
+            for (Object value : values) {
+                stmt.setObject(index++, value);
+            }
+            stmt.executeUpdate();
+        }
     }
 }
