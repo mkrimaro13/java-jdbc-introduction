@@ -30,7 +30,7 @@ public class DatabaseUtils {
         for (T datum : data) {
             String[] row = new String[columnCount];
             for (int j = 0; j < columnCount; j++) {
-                row[j] = fields[j].get(datum).toString();
+                row[j] = fields[j].get(datum) != null ? fields[j].get(datum).toString() : "NO DATA" ;
                 widths[j] = Math.max(widths[j], row[j].length());
             }
             rows.add(row);
