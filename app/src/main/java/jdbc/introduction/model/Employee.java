@@ -1,6 +1,10 @@
 package jdbc.introduction.model;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.lang.reflect.Field;
 
@@ -8,6 +12,7 @@ import java.lang.reflect.Field;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(toBuilder = true)
 public class Employee {
     private int id;
     private String firstName;
