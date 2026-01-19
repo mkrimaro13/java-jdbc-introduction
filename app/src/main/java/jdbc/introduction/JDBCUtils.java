@@ -15,8 +15,6 @@ public class JDBCUtils {
         System.out.println(row);
     }
 
-
-
     public static void printResultSet(ResultSet resultSet) {
         try {
             if (resultSet == null) {
@@ -59,8 +57,8 @@ public class JDBCUtils {
     }
 
     public static ResultSet simpleSelect(Connection connection, String table,
-                                         List<String> columns,
-                                         List<String> filters) throws Exception {
+            List<String> columns,
+            List<String> filters) throws Exception {
         StringBuilder selectQuery = new StringBuilder("SELECT ");
 
         if (columns == null || columns.isEmpty()) {
@@ -139,14 +137,14 @@ public class JDBCUtils {
             for (int i = 0; i < values.length; i++) {
                 preparedStatement.setObject(i + 1, values[i]);
             }
-            int rowsInserted = preparedStatement.executeUpdate();
+            preparedStatement.executeUpdate();
         } catch (Exception e) {
             System.out.printf("Algo ha salido mal realizando la inserción de datos: %s%n", e);
         }
     }
 
     public static void simpleUpdate(Connection connection, String table, String[] columns, Object[] values,
-                                    List<String> filters) {
+            List<String> filters) {
         if (connection == null) {
             throw new IllegalArgumentException("Se requiere una conexión activa para realizar la consulta");
         }
