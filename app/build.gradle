@@ -19,6 +19,8 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation 'com.mysql:mysql-connector-j:9.3.0'
+    // Source: https://mvnrepository.com/artifact/org.projectlombok/lombok
+    implementation 'org.projectlombok:lombok:1.18.42'
     // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
 
