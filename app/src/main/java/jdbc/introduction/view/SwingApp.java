@@ -3,6 +3,7 @@ package jdbc.introduction.view;
 import jdbc.introduction.model.Employee;
 import jdbc.introduction.repository.EmployeeRepository;
 import jdbc.introduction.repository.Repository;
+import jdbc.introduction.util.DatabaseConnection;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -51,7 +52,11 @@ public class SwingApp extends JFrame {
         deleteButton.setFocusPainted(false);
 
         // Crear el repositorio
-        employeeRepository = new EmployeeRepository();
+        try{
+            employeeRepository = new EmployeeRepository(DatabaseConnection.getInstance());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         // Cargar empleados iniciales en la tabla
         refreshEmployeeTable();
