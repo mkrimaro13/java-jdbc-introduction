@@ -19,6 +19,7 @@ public class Employee {
     private String paSurname;
     private String maSurname;
     private String email;
+    private String curp;
     private float salary;
 
     public String toString() {
