@@ -2,23 +2,31 @@ package jdbc.introduction.repository;
 
 import jdbc.introduction.model.Employee;
 import jdbc.introduction.util.DatabaseConnection;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 
+@RequiredArgsConstructor
 public class EmployeeRepository implements Repository<Employee> {
-    private Connection getConnection() throws SQLException {
-        return DatabaseConnection.getInstance();
-    }
+    private final Connection connection;
 
     private Employee createEmployee(ResultSet resultSet) throws SQLException {
-        return new Employee(resultSet.getInt("id"), resultSet.getString("first_name"), resultSet.getString("pa_surname"), resultSet.getString("ma_surname"), resultSet.getString("email"), resultSet.getFloat("salary"));
+        return Employee.builder()
+                .id(resultSet.getInt("id"))
+                .firstName(resultSet.getString("first_name"))
+                .paSurname(resultSet.getString("pa_surname"))
+                .maSurname(resultSet.getString("ma_surname"))
+                .email(resultSet.getString("email"))
+                .salary(resultSet.getFloat("salary"))
+                .curp(resultSet.getString("curp"))
+                .build();
     }
 
     @Override
     public List<Employee> getAll() throws SQLException {
-        try (Statement statement = getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY); ResultSet resultSet = statement.executeQuery("SELECT * FROM employees")) {
+        try (Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY); ResultSet resultSet = statement.executeQuery("SELECT * FROM employees")) {
             //JDBCUtils.printResultSet(resultSet);
             resultSet.beforeFirst();
             List<Employee> employees = new ArrayList<>();
@@ -32,7 +40,7 @@ public class EmployeeRepository implements Repository<Employee> {
     @Override
     public Optional<Employee> getById(Object id) throws SQLException {
         Optional<Employee> emp = Optional.empty();
-        try (PreparedStatement statement = getConnection().prepareStatement("SELECT * FROM employees WHERE id = ?")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM employees WHERE id = ?")) {
             statement.setObject(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -61,7 +69,7 @@ public class EmployeeRepository implements Repository<Employee> {
     @Override
     public void delete(int id) throws Exception {
         if (checkEmployeeExists(id)) {
-            try (PreparedStatement preparedStatement = getConnection().prepareStatement("DELETE FROM employees WHERE id = ?")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM employees WHERE id = ?")) {
                 preparedStatement.setObject(1, id);
                 preparedStatement.executeUpdate();
             }
@@ -73,7 +81,7 @@ public class EmployeeRepository implements Repository<Employee> {
 
     private boolean checkEmployeeExists(int id) throws Exception {
         String sql = "SELECT 1 FROM employees WHERE id = ?";
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
@@ -122,7 +130,7 @@ public class EmployeeRepository implements Repository<Employee> {
     }
 
     private void executeQuery(String query, Collection<Object> values) throws Exception {
-        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             int index = 1;
             for (Object value : values) {
                 stmt.setObject(index++, value);
