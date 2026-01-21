@@ -52,11 +52,8 @@ public class SwingApp extends JFrame {
         deleteButton.setFocusPainted(false);
 
         // Crear el repositorio
-        try{
-            employeeRepository = new EmployeeRepository(DatabaseConnection.getInstance());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        employeeRepository = new EmployeeRepository();
+
 
         // Cargar empleados iniciales en la tabla
         refreshEmployeeTable();

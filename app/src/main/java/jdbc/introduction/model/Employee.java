@@ -39,7 +39,7 @@ public class Employee {
             try {
                 row[i] = fields[i].get(this).toString();
             } catch (Exception e) {
-                System.out.printf("Algo ha salido mal convirtiendo la clase a texto: %s%n", e);
+                //System.out.printf("Algo ha salido mal convirtiendo la clase a texto: %s%n", e);
                 row[i] = "NO DATA";
             }
 
