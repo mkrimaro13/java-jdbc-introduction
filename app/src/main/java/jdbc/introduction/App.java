@@ -1,55 +1,44 @@
 package jdbc.introduction;
 
-import jdbc.introduction.model.Employee;
-import jdbc.introduction.repository.EmployeeRepository;
-//import jdbc.introduction.repository.Repository;
-//import jdbc.introduction.util.DatabaseConnection;
-//import jdbc.introduction.view.SwingApp;
-//
-//import java.sql.Connection;
+import java.util.List;
 
-import static jdbc.introduction.util.DatabaseUtils.printResultsList;
+import jakarta.persistence.EntityManager;
+import jdbc.introduction.entity.Employee;
+import jdbc.introduction.util.UtilEntity;
 
 public class App {
-    public String getGreeting() {
-        return "Hello World!";
+
+    public static void main(String[] args) {
+        EntityManager em = UtilEntity.getEntityManager();
+        try {
+
+            // Consultar 1 registro
+            Employee emp = em.find(Employee.class, 3);
+            System.out.println(emp);
+
+            // // Insertar 1 registro
+            // Employee newEmployee = Employee.builder()
+            //         .firstName("Maria")
+            //         .paSurname("Adelaida")
+            //         .maSurname("Luna")
+            //         .salary(7900f)
+            //         .email("mal@mal")
+            //         .curp("AWQOPES12398QWEI82")
+            //         .build();
+
+            // em.getTransaction().begin();
+            // em.persist(newEmployee);
+            // em.getTransaction().commit();
+
+            // Obtener todos los registros
+            List<Employee> employees = em
+                    .createQuery(String.format("select e from %s e", Employee.class.getName()), Employee.class)
+                    .getResultList();
+            employees.forEach(System.out::print);
+
+        } finally {
+            em.close();
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Listando Todos:");
-        EmployeeRepository empRep = new EmployeeRepository();
-        printResultsList(empRep.getAll(), Employee.class);
-        System.out.printf("Obteniendo id: %d%n", 4);
-        System.out.println(empRep.getById(4).orElse(new Employee()));
-//        try (Connection connection = DatabaseConnection.getInstance()) {
-//            System.out.println("Conexión a la base de datos realizada");
-//            if (connection.getAutoCommit()) {
-//                connection.setAutoCommit(false);
-//            }
-//            try {
-//                Repository<Employee> repo = new EmployeeRepository();
-//                System.out.println("Insertando empleados");
-//                repo.save(Employee.builder()
-//                        .firstName("Anastasia")
-//                        .paSurname("Banamerina")
-//                        .email("bananaana@aaa.a")
-//                        .salary(8000.00f)
-//                        .curp("ABN123ASDPLZ1W2K03")
-//                        .build());
-//                printResultsList(repo.getAll(), Employee.class);
-//                connection.commit();
-//            } catch (Exception e) {
-//                connection.rollback();
-//                throw new RuntimeException(e);
-//            }
-        //JDBCUtils.simpleInsert(connection, "employees", new String[]{"first_name", "pa_surname", "ma_surname", "email", "salary"}, new Object[]{"Marco", "Osorio", "Naranjo", "marco@example.com", 55000.00});
-        //JDBCUtils.simpleUpdate(connection, "employees", new String[]{"first_name", "pa_surname", "ma_surname"}, new Object[]{"Manuela", "Lopera", "Jaramillo"}, List.of("id = 11"));
-        //JDBCUtils.simpleDelete(connection, "employees", List.of("id = 10"));
-        //JDBCUtils.simpleSelect(connection, "employees", List.of("id", "first_name", "pa_surname", "ma_surname", "email", "salary"), null);
-        //JDBCUtils.printResultSet(resultSet);
-        //repo.delete(15);
-        //System.out.println(repo.getById(2).orElse(new Employee()));
-        //SwingApp app = new SwingApp();
-        //app.setVisible(true);
-    }
 }

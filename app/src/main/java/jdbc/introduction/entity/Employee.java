@@ -1,10 +1,16 @@
-package jdbc.introduction.model;
+package jdbc.introduction.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 import java.lang.reflect.Field;
 
@@ -13,13 +19,23 @@ import java.lang.reflect.Field;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@Entity
+@Table(name = "employees", catalog = "project")
 public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @Column(name = "first_name", length = 64)
     private String firstName;
+    @Column(name = "pa_surname", length = 64)
     private String paSurname;
+    @Column(name = "ma_surname", length = 64)
     private String maSurname;
+    @Column(length = 64)
     private String email;
+    @Column(length = 18, unique = true)
     private String curp;
+    @Column
     private float salary;
 
     public String toString() {
@@ -39,7 +55,8 @@ public class Employee {
             try {
                 row[i] = fields[i].get(this).toString();
             } catch (Exception e) {
-                //System.out.printf("Algo ha salido mal convirtiendo la clase a texto: %s%n", e);
+                // System.out.printf("Algo ha salido mal convirtiendo la clase a texto: %s%n",
+                // e);
                 row[i] = "NO DATA";
             }
 
